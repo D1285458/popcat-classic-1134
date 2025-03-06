@@ -80,50 +80,88 @@
     <div class="cat-img" id="p">0202</div>
 </div>
 <script>
-
     // 用 javascript 預載張嘴圖片 op.png
     let img = new Image();
     img.src = "imgs/op.png";
 
     // 1. 計數器初始化
-    // 2. 寫一個function 計數器累加
-
-    let count = 0;
+    let count = getCookie("clickCount") ? parseInt(getCookie("clickCount")) : 0;
+    let audioIndex = 1;
     // 用 id 抓取 文字的 HTML 元素
     let p = document.getElementById("p");
     // 顯示計數器的數字
     p.innerText = count;
 
+    let isKeyDown = false;
+
     function addCount() {
         count += 1;
-        // document.getElementById("p").innerText = count;
-    }
-    // 註冊滑鼠按下的事件，呼叫計數器累加 function
-    document.addEventListener("mousedown", addCount);
-    // 註冊滑鼠按下的時候，更新計數器的顯示
-    document.addEventListener("mousedown", function() {
-        // addCount();
         p.innerText = count;
-    });
+        setCookie("clickCount", count, 365);
+    }
 
-
-   // 當滑鼠按下，切換張嘴圖片
-   // 當滑鼠放開，便恢復原來圖片
-    p.addEventListener("mousedown", function() {
+    function openMouth() {
         p.id = "op";
-    });
-    p.addEventListener("mouseup", function() {
-        p.id = "p";
-    });
-    // 當滑鼠按下，播放 pops/pop1.mp3
+    }
 
-    document.addEventListener("mousedown", function() {
-        let audio = new Audio("pops/pop1.mp3");
+    function closeMouth() {
+        console.log("Closing mouth after delay");
+        setTimeout(() => {
+            p.id = "p";
+            console.log("Mouth closed");
+        }, 100);
+    }
+
+    function playAudio() {
+        let audio = new Audio(`pops/pop${audioIndex}.mp3`);
         audio.play();
+        audioIndex = (audioIndex % 4) + 1; // 循環播放 pop1 到 pop4
+    }
+
+    function setCookie(name, value, days) {
+        let date = new Date();
+        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+        let expires = "expires=" + date.toUTCString();
+        document.cookie = name + "=" + value + ";" + expires + ";path=/";
+    }
+
+    function getCookie(name) {
+        let nameEQ = name + "=";
+        let ca = document.cookie.split(';');
+        for (let i = 0; i < ca.length; i++) {
+            let c = ca[i];
+            while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+            if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+        }
+        return null;
+    }
+
+    // 註冊滑鼠按下的事件，呼叫計數器累加 function
+    document.addEventListener("mousedown", () => {
+        addCount();
+        openMouth();
+        playAudio();
+    });
+    document.addEventListener("mouseup", closeMouth);
+
+    // 註冊鍵盤按下的事件，呼叫計數器累加 function
+    document.addEventListener("keydown", (event) => {
+        const validKeys = [" ", "Enter", "ArrowUp"]; // 可接受的鍵盤按鍵
+        if (validKeys.includes(event.key) && !isKeyDown) {
+            isKeyDown = true;
+            addCount();
+            openMouth();
+            playAudio();
+        }
     });
 
-
+    document.addEventListener("keyup", (event) => {
+        const validKeys = [" ", "Enter", "ArrowUp"]; // 可接受的鍵盤按鍵
+        if (validKeys.includes(event.key)) {
+            isKeyDown = false;
+            closeMouth();
+        }
+    });
 </script>
-
 </body>
 </html>
